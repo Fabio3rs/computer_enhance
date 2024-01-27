@@ -23,7 +23,15 @@
    I have no idea. */
 #define _CRT_SECURE_NO_WARNINGS
 
+#ifdef _WIN32
 #include <windows.h>
+#define SysAlloc(Size) VirtualAlloc(0, Size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE)
+#else
+#include <unistd.h>
+#include <sys/mman.h>
+#define SysAlloc(Size) mmap(0, Size, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0)
+#endif
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -54,7 +62,7 @@ int main(void)
 {
     for(int PointerIndex = 0; PointerIndex < 16; ++PointerIndex)
     {
-        void *Pointer = (u8 *)VirtualAlloc(0, 1024*1024, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+        void *Pointer = (u8 *)SysAlloc(1024*1024);
         
         u64 Address = (u64)Pointer;
         PrintBinaryBits(Address, 48, 16);
